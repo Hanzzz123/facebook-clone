@@ -50,6 +50,8 @@ export const addPost = (req, res)=>{
         }
     )}
 
+
+
 export const deletePost = (req, res)=>{
     const token = req.cookies.accessToken;
     if(!token) return res.status(401).json("Not logged in");
@@ -67,4 +69,32 @@ export const deletePost = (req, res)=>{
             });
         }
     )}
+
+export const editPost = (req, res) => {
+    const token = req.cookies.accessToken;
+    if (!token) return res.status(401).json("Not logged in");
+
+    jwt.verify(token, "secretkey", (err, userInfo) => {
+        if (err) return res.status(403).json("Token is not valid!");
+
+        const postId = req.params.id;
+
+        const q = "UPDATE posts SET `desc` = ?, `img` = ? WHERE `id` = ? AND `userId` = ?";
+
+        // Values to be updated in the database
+        const values = [
+            req.body.desc,
+            req.body.img,
+        ];
+
+
+        db.query(q,[...values, postId,userInfo.id], (err, data) => {
+            if (err) return res.status(500).json(err);
+            if (data.affectedRows > 0)
+                return res.status(200).json("Post has been updated");
+            return res.status(403).json("You can only edit your own post!");
+        });
+    });
+}
+
 
